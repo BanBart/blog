@@ -29,9 +29,8 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # Use Unicorn as the app server
 # gem 'unicorn'
 
-# Use Capistrano for deployment
-# gem 'capistrano-rails', group: :development
 gem 'puma'
+gem "figaro"
 
 group :development do
     gem 'capistrano',         require: false
