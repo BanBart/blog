@@ -1,5 +1,5 @@
 # Change these
-server '46.101.200.162', port: 1111, roles: [:web, :app, :db], primary: true
+server '46.101.200.162', port: 20, roles: [:web, :app, :db], primary: true
 
 set :repo_url,        'git@github.com:BanBart/blog.git'
 set :application,     'blog'
