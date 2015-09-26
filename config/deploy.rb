@@ -1,5 +1,5 @@
 # Change these
-server '46.101.200.162', port: 20, roles: [:web, :app, :db], primary: true
+server '46.101.200.162', port: 1200, roles: [:web, :app, :db], primary: true
 
 set :repo_url,        'git@github.com:BanBart/blog.git'
 set :application,     'blog'
@@ -43,38 +43,6 @@ namespace :puma do
   end
 
   before :start, :make_dirs
-end
-
-namespace :db do
-  desc "Create database yaml in shared path"
-  task :configure do
-    on roles(:app) do 
-      set :database_username, ask("Database username:")
-      set :database_password, ask('Enter the database password:', 'default', echo: false)
-
-      db_config = <<-EOF
-        base: &base
-          adapter: mysql2
-          encoding: utf8
-          reconnect: false
-          pool: 5
-          username: #{database_username}
-          password: #{database_password}
-        development:
-          database: #{application}_development
-          <<: *base
-        test:
-          database: #{application}_test
-          <<: *base
-        production:
-          database: #{application}_production
-          <<: *base
-      EOF
-
-      run "mkdir -p #{shared_path}/config"
-      put db_config, "#{shared_path}/config/database.yml"
-    end
-  end
 end
 
 namespace :deploy do
