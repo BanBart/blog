@@ -48,35 +48,32 @@ end
 namespace :db do
   desc "Create database yaml in shared path"
   task :configure do
-    set :database_username do
-      "sakyhank"
+    on roles(:app) do 
+      set :database_username, ask("Database username:")
+      set :database_password, ask('Enter the database password:', 'default', echo: false)
+
+      db_config = <<-EOF
+        base: &base
+          adapter: mysql2
+          encoding: utf8
+          reconnect: false
+          pool: 5
+          username: #{database_username}
+          password: #{database_password}
+        development:
+          database: #{application}_development
+          <<: *base
+        test:
+          database: #{application}_test
+          <<: *base
+        production:
+          database: #{application}_production
+          <<: *base
+      EOF
+
+      run "mkdir -p #{shared_path}/config"
+      put db_config, "#{shared_path}/config/database.yml"
     end
-
-    set :database_password do
-      Capistrano::CLI.password_prompt "Database Password: "
-    end
-
-    db_config = <<-EOF
-      base: &base
-        adapter: mysql2
-        encoding: utf8
-        reconnect: false
-        pool: 5
-        username: #{database_username}
-        password: #{database_password}
-      development:
-        database: #{application}_development
-        <<: *base
-      test:
-        database: #{application}_test
-        <<: *base
-      production:
-        database: #{application}_production
-        <<: *base
-    EOF
-
-    run "mkdir -p #{shared_path}/config"
-    put db_config, "#{shared_path}/config/database.yml"
   end
 end
 
@@ -95,7 +92,7 @@ namespace :deploy do
   desc 'Initial Deploy'
   task :initial do
     on roles(:app) do
-      before 'deploy:restart', 'puma:start', 'db:configure'
+      before 'deploy:restart', 'puma:start'
       invoke 'deploy'
     end
   end
@@ -108,6 +105,7 @@ namespace :deploy do
   end
 
   before :starting,     :check_revision
+  before :starting,     :db:configure
   after  :finishing,    :compile_assets
   after  :finishing,    :cleanup
   after  :finishing,    :restart
