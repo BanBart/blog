@@ -22,7 +22,6 @@ set :ssh_options,     { forward_agent: true, user: fetch(:user), keys: %w(~/.ssh
 set :puma_preload_app, true
 set :puma_worker_timeout, nil
 set :puma_init_active_record, true  # Change to false when not using ActiveRecord
-set :linked_files, %w{config/database.yml}
 ## Defaults:
 # set :scm,           :git
 # set :branch,        :master
@@ -31,7 +30,7 @@ set :linked_files, %w{config/database.yml}
 # set :keep_releases, 5
 
 ## Linked Files & Directories (Default None):
-# set :linked_files, %w{config/database.yml}
+set :linked_files, %w{config/database.yml}
 # set :linked_dirs,  %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system}
 
 namespace :puma do
@@ -44,6 +43,41 @@ namespace :puma do
   end
 
   before :start, :make_dirs
+end
+
+namespace :db do
+  desc "Create database yaml in shared path"
+  task :configure do
+    set :database_username do
+      "sakyhank"
+    end
+
+    set :database_password do
+      Capistrano::CLI.password_prompt "Database Password: "
+    end
+
+    db_config = <<-EOF
+      base: &base
+        adapter: mysql2
+        encoding: utf8
+        reconnect: false
+        pool: 5
+        username: #{database_username}
+        password: #{database_password}
+      development:
+        database: #{application}_development
+        <<: *base
+      test:
+        database: #{application}_test
+        <<: *base
+      production:
+        database: #{application}_production
+        <<: *base
+    EOF
+
+    run "mkdir -p #{shared_path}/config"
+    put db_config, "#{shared_path}/config/database.yml"
+  end
 end
 
 namespace :deploy do
@@ -61,7 +95,7 @@ namespace :deploy do
   desc 'Initial Deploy'
   task :initial do
     on roles(:app) do
-      before 'deploy:restart', 'puma:start'
+      before 'deploy:restart', 'puma:start', 'db:configure'
       invoke 'deploy'
     end
   end
