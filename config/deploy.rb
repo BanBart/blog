@@ -105,7 +105,7 @@ namespace :deploy do
   end
 
   before :starting,     :check_revision
-  before :starting,     :db:configure
+  before :starting,     db:configure
   after  :finishing,    :compile_assets
   after  :finishing,    :cleanup
   after  :finishing,    :restart
