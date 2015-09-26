@@ -30,6 +30,7 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # gem 'unicorn'
 
 gem 'puma'
+gem 'puma_worker_killer'
 gem "figaro"
 
 group :development do
